@@ -7,6 +7,7 @@ var join = require('path').join;
 var CONFIG_NAME = join(process.cwd(), 'quickly.js');
 var R = require('ramda');
 var spawn = require('child_process').spawn;
+var quote = require('quote');
 
 function startDependencies(config) {
   la(check.object(config), 'expected config', config);
@@ -23,6 +24,9 @@ function startService(config) {
     var cmd = check.unemptyString(serviceConfig) ? serviceConfig : serviceConfig.exec;
     la(check.unemptyString(cmd), 'cannot find command for service', serviceName,
       'in config', serviceConfig);
+
+    console.log('starting', quote(serviceName),
+      'in', quote(process.cwd()), 'command', quote(cmd));
 
     return {
       name: serviceName,
@@ -44,6 +48,30 @@ function prepareToKill(namePids) {
   });
 }
 
+function printStartedDependencies(dependencies) {
+  if (check.unemptyArray(dependencies)) {
+    console.log('started dependencies', dependencies.join(', '));
+  } else {
+    console.log('no dependencies to start');
+  }
+}
+
+function waitAndKill(services) {
+  if (check.unemptyArray(services)) {
+    var namePids = services.map(function (s) {
+      return {
+        name: s.name,
+        pid: s.child.pid
+      };
+    });
+    console.table('started services', namePids);
+    console.log('Press Ctrl+C to stop this process and kill all services');
+    prepareToKill(services);
+  } else {
+    console.log('no services to start');
+  }
+}
+
 function quickly() {
   var configPath = CONFIG_NAME;
   if (!exists(configPath)) {
@@ -54,33 +82,10 @@ function quickly() {
   var config = require(CONFIG_NAME);
   console.log('loaded', config);
 
-  function printStartedDependencies(dependencies) {
-    if (check.unemptyArray(dependencies)) {
-      console.log('started dependencies', dependencies.join(', '));
-    } else {
-      console.log('no dependencies to start');
-    }
-  }
-
   var startNeededService = startService.bind(null, config);
 
-  function waitAndKill(services) {
-    if (check.unemptyArray(services)) {
-      var namePids = services.map(function (s) {
-        return {
-          name: s.name,
-          pid: s.child.pid
-        };
-      });
-      console.table('started services', namePids);
-      console.log('Press Ctrl+C to stop this process and kill all services');
-      prepareToKill(services);
-    } else {
-      console.log('no services to start');
-    }
-  }
-
-  startDependencies(config)
+  Promise.resolve(config)
+    .then(startDependencies)
     .tap(printStartedDependencies)
     .then(startNeededService)
     .then(waitAndKill)
