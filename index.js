@@ -44,7 +44,7 @@ function prepareToKill(namePids) {
   });
 }
 
-function quickUp() {
+function quickly() {
   var configPath = CONFIG_NAME;
   if (!exists(configPath)) {
     console.error('Cannot find config', configPath);
@@ -54,31 +54,37 @@ function quickUp() {
   var config = require(CONFIG_NAME);
   console.log('loaded', config);
 
+  function printStartedDependencies(dependencies) {
+    if (check.unemptyArray(dependencies)) {
+      console.log('started dependencies', dependencies.join(', '));
+    } else {
+      console.log('no dependencies to start');
+    }
+  }
+
+  var startNeededService = startService.bind(null, config);
+
+  function waitAndKill(services) {
+    if (check.unemptyArray(services)) {
+      var namePids = services.map(function (s) {
+        return {
+          name: s.name,
+          pid: s.child.pid
+        };
+      });
+      console.table('started services', namePids);
+      console.log('Press Ctrl+C to stop this process and kill all services');
+      prepareToKill(services);
+    } else {
+      console.log('no services to start');
+    }
+  }
+
   startDependencies(config)
-    .then(function (dependencies) {
-      if (check.unemptyArray(dependencies)) {
-        console.log('started dependencies', dependencies.join(', '));
-      } else {
-        console.log('no dependencies to start');
-      }
-    })
-    .then(startService.bind(null, config))
-    .then(function (services) {
-      if (check.unemptyArray(services)) {
-        var namePids = services.map(function (s) {
-          return {
-            name: s.name,
-            pid: s.child.pid
-          };
-        });
-        console.table('started services', namePids);
-        console.log('Press Ctrl+C to stop this process and kill all services');
-        prepareToKill(services);
-      } else {
-        console.log('no services to start');
-      }
-    })
+    .tap(printStartedDependencies)
+    .then(startNeededService)
+    .then(waitAndKill)
     .done();
 }
 
-module.exports = quickUp;
+module.exports = quickly;
