@@ -33,5 +33,9 @@
     "console.table": "0.4.0",
     "lazy-ass": "0.5.3",
     "ramda": "0.13.0"
-  }
+  },
+  "devDependencies": {
+    "pre-git": "0.2.1"
+  },
+  "pre-commit": "npm version"
 }
