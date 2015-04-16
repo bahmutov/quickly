@@ -65,6 +65,23 @@ function printStartedDependencies(dependencies) {
   }
 }
 
+function printErrors(services) {
+  if (!check.unemptyArray(services)) {
+    return;
+  }
+  services.forEach(function (s) {
+    s.child.stdout.setEncoding('utf8');
+    s.child.stdout.on('data', function (txt) {
+      console.error(s.name + ':', txt);
+    });
+
+    s.child.stderr.setEncoding('utf8');
+    s.child.stderr.on('data', function (txt) {
+      console.error(s.name + ' error:', txt);
+    });
+  });
+}
+
 function printRunningServices(services) {
   if (!check.unemptyArray(services)) {
     return;
@@ -104,6 +121,7 @@ function quickly() {
     .then(startDependencies)
     .tap(printStartedDependencies)
     .then(startNeededService)
+    .tap(printErrors)
     .tap(printRunningServices)
     .then(waitAndKill)
     .done();
