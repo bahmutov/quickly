@@ -1,10 +1,12 @@
 require('lazy-ass');
+require('console.table');
 var check = require('check-more-types');
 var Promise = require('bluebird');
 var exists = require('fs').existsSync;
 var join = require('path').join;
 var CONFIG_NAME = join(process.cwd(), 'quick-up.js');
 var R = require('ramda');
+var spawn = require('child_process').spawn;
 
 function startDependencies(config) {
   la(check.object(config), 'expected config', config);
@@ -13,7 +15,33 @@ function startDependencies(config) {
 
 function startService(config) {
   var services = R.reject(R.eq('dependencies'), R.keys(config));
-  return Promise.resolve(services);
+
+  return Promise.map(services, function (serviceName) {
+    var serviceConfig = config[serviceName];
+    la(check.object(serviceConfig) || check.unemptyString(serviceConfig),
+      'invalid config', serviceConfig, 'for', serviceName);
+    var cmd = check.unemptyString(serviceConfig) ? serviceConfig : serviceConfig.exec;
+    la(check.unemptyString(cmd), 'cannot find command for service', serviceName,
+      'in config', serviceConfig);
+
+    return {
+      name: serviceName,
+      child: spawn(cmd)
+    };
+
+  }, { concurrency: 1 });
+}
+
+function prepareToKill(namePids) {
+  process.on('SIGINT', function cleanupStartedServices() {
+    console.log('\nprocess is ready to exit');
+    namePids.forEach(function (proc) {
+      console.log('killing', proc.name);
+      proc.child.kill('SIGKILL');
+    });
+    console.log('all done');
+    process.exit();
+  });
 }
 
 function quickUp() {
@@ -37,7 +65,15 @@ function quickUp() {
     .then(startService.bind(null, config))
     .then(function (services) {
       if (check.unemptyArray(services)) {
-        console.log('started services', services.join(', '));
+        var namePids = services.map(function (s) {
+          return {
+            name: s.name,
+            pid: s.child.pid
+          };
+        });
+        console.table('started services', namePids);
+        console.log('Press Ctrl+C to stop this process and kill all services');
+        prepareToKill(services);
       } else {
         console.log('no services to start');
       }
