@@ -1,0 +1,29 @@
+{
+  "name": "quick-up",
+  "version": "0.1.0",
+  "description": "Quickly setup dependent services and servers for local development",
+  "main": "index.js",
+  "bin": "./bin/quick-up",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bahmutov/quick-up.git"
+  },
+  "keywords": [
+    "setup",
+    "test",
+    "testing",
+    "local",
+    "dev",
+    "server",
+    "services"
+  ],
+  "author": "Gleb Bahmutov <gleb.bahmutov@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bahmutov/quick-up/issues"
+  },
+  "homepage": "https://github.com/bahmutov/quick-up"
+}
