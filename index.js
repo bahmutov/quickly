@@ -4,7 +4,7 @@ var check = require('check-more-types');
 var Promise = require('bluebird');
 var exists = require('fs').existsSync;
 var join = require('path').join;
-var CONFIG_NAME = join(process.cwd(), 'quick-up.js');
+var CONFIG_NAME = join(process.cwd(), 'quickly.js');
 var R = require('ramda');
 var spawn = require('child_process').spawn;
 

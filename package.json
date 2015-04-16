@@ -1,15 +1,15 @@
 {
-  "name": "quick-up",
+  "name": "quickly",
   "version": "0.1.2",
   "description": "Quickly setup dependent services and servers for local development",
   "main": "index.js",
-  "bin": "./bin/quick-up",
+  "bin": "./bin/quickly",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/bahmutov/quick-up.git"
+    "url": "https://github.com/bahmutov/quickly.git"
   },
   "keywords": [
     "setup",
@@ -23,9 +23,9 @@
   "author": "Gleb Bahmutov <gleb.bahmutov@gmail.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/bahmutov/quick-up/issues"
+    "url": "https://github.com/bahmutov/quickly/issues"
   },
-  "homepage": "https://github.com/bahmutov/quick-up",
+  "homepage": "https://github.com/bahmutov/quickly",
   "dependencies": {
     "bluebird": "2.9.24",
     "check-more-types": "1.5.0",

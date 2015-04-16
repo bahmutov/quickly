@@ -1,4 +1,4 @@
-# quick-up
+# quickly
 
 > Quickly setups dependent services and servers for local development
 
