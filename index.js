@@ -21,16 +21,25 @@ function startService(config) {
     var serviceConfig = config[serviceName];
     la(check.object(serviceConfig) || check.unemptyString(serviceConfig),
       'invalid config', serviceConfig, 'for', serviceName);
+
     var cmd = check.unemptyString(serviceConfig) ? serviceConfig : serviceConfig.exec;
     la(check.unemptyString(cmd), 'cannot find command for service', serviceName,
       'in config', serviceConfig);
 
+    var args = check.unemptyString(serviceConfig) ? [] : serviceConfig.args;
+    if (!args) {
+      args = [];
+    } else if (check.string(args)) {
+      args = args.split(' ');
+    }
+
     console.log('starting', quote(serviceName),
-      'in', quote(process.cwd()), 'command', quote(cmd));
+      'in', quote(process.cwd()), 'command', quote(cmd), quote(args.join(' ')));
 
     return {
       name: serviceName,
-      child: spawn(cmd)
+      child: spawn(cmd, args),
+      cmd: cmd
     };
 
   }, { concurrency: 1 });
@@ -56,15 +65,22 @@ function printStartedDependencies(dependencies) {
   }
 }
 
+function printRunningServices(services) {
+  if (!check.unemptyArray(services)) {
+    return;
+  }
+  var namePids = services.map(function (s) {
+    return {
+      name: s.name,
+      pid: s.child.pid,
+      cmd: s.cmd
+    };
+  });
+  console.table('started services', namePids);
+}
+
 function waitAndKill(services) {
   if (check.unemptyArray(services)) {
-    var namePids = services.map(function (s) {
-      return {
-        name: s.name,
-        pid: s.child.pid
-      };
-    });
-    console.table('started services', namePids);
     console.log('Press Ctrl+C to stop this process and kill all services');
     prepareToKill(services);
   } else {
@@ -88,6 +104,7 @@ function quickly() {
     .then(startDependencies)
     .tap(printStartedDependencies)
     .then(startNeededService)
+    .tap(printRunningServices)
     .then(waitAndKill)
     .done();
 }
