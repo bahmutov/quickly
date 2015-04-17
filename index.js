@@ -4,7 +4,7 @@ var check = require('check-more-types');
 var Promise = require('bluebird');
 var exists = require('fs').existsSync;
 var join = require('path').join;
-var CONFIG_NAME = join(process.cwd(), 'quickly.js');
+var CONFIG_NAME = 'quickly.js';
 var R = require('ramda');
 var spawn = require('child_process').spawn;
 var quote = require('quote');
@@ -25,7 +25,7 @@ function startDependency(info) {
   return chdir.to(info.path)
     .then(function () {
       console.log('starting', quote(info.service), 'in', quote(process.cwd()));
-      return info.service;
+      return quickly(null, info.service);
     })
     .tap(chdir.back);
 
@@ -179,20 +179,22 @@ function loadConfig(filename) {
 }
 
 function quickly(config, serviceName) {
+  console.log('quickly in', quote(process.cwd()), serviceName);
+
   if (!config) {
-    config = loadConfig(CONFIG_NAME);
+    var fullConfigName = join(process.cwd(), CONFIG_NAME);
+    config = loadConfig(fullConfigName);
   }
 
   var startNeededService = startMainService.bind(null, config, serviceName);
 
-  Promise.resolve(config)
+  return Promise.resolve(config)
     .then(startDependencies)
     .tap(printStartedDependencies)
     .then(startNeededService)
     .tap(printErrors)
     .tap(printRunningServices)
-    .then(waitAndKill)
-    .done();
+    .then(waitAndKill);
 }
 
 module.exports = quickly;

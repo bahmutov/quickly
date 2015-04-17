@@ -4,4 +4,8 @@ var pkg = require('../package.json');
 var info = pkg.name + '@' + pkg.version + ' - ' + pkg.description;
 console.log(info);
 
-require('../index')();
+require('../index')()
+  .finally(function () {
+    console.log('all done');
+  })
+  .done();
