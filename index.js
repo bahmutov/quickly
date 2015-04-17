@@ -9,9 +9,38 @@ var R = require('ramda');
 var spawn = require('child_process').spawn;
 var quote = require('quote');
 
+function configDescribesSingleService(config) {
+  return (Object.keys(config).length) === 1;
+}
+
+function startDependency(info) {
+  la(check.object(info), 'expected dependency info', info);
+  return Promise.resolve(info.name || info.service);
+}
+
 function startDependencies(config) {
   la(check.object(config), 'expected config', config);
-  return Promise.resolve([]);
+
+  if (configDescribesSingleService(config)) {
+    var name = Object.keys(config)[0];
+    config = config[name];
+  }
+
+  var deps = config.dependencies;
+  if (!deps || check.empty(deps)) {
+    return Promise.resolve([]);
+  }
+
+  if (check.string(deps)) {
+    deps = [deps];
+  }
+  if (!check.array(deps)) {
+    deps = [deps];
+  }
+
+  console.log('found dependencies to start', deps);
+  la(check.array(deps), 'expected list of dependencies', deps);
+  return Promise.map(deps, startDependency, { concurrency: 1 });
 }
 
 function startService(config) {
@@ -105,26 +134,34 @@ function waitAndKill(services) {
   }
 }
 
-function quickly() {
-  var configPath = CONFIG_NAME;
-  if (!exists(configPath)) {
-    console.error('Cannot find config', configPath);
-    return;
+function loadConfig(filename) {
+  la(check.unemptyString(filename), 'need a filename');
+  if (!exists(filename)) {
+    console.error('Cannot find config', filename);
+    throw new Error('Config not found ' + filename);
   }
-  console.log('loading', configPath);
-  var config = require(CONFIG_NAME);
-  console.log('loaded', config);
+  console.log('loading', filename);
+  var config = require(filename);
+  console.log('loaded config', config, 'from', quote(filename));
+  return config;
+}
+
+function quickly(config) {
+  if (!config) {
+    config = loadConfig(CONFIG_NAME);
+  }
 
   var startNeededService = startService.bind(null, config);
 
   Promise.resolve(config)
     .then(startDependencies)
-    .tap(printStartedDependencies)
+    .tap(printStartedDependencies).done();
+    /*
     .then(startNeededService)
     .tap(printErrors)
     .tap(printRunningServices)
     .then(waitAndKill)
-    .done();
+    .done();*/
 }
 
 module.exports = quickly;
