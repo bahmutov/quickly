@@ -8,6 +8,7 @@ var CONFIG_NAME = join(process.cwd(), 'quickly.js');
 var R = require('ramda');
 var spawn = require('child_process').spawn;
 var quote = require('quote');
+var chdir = require('chdir-promise');
 
 function configDescribesSingleService(config) {
   return (Object.keys(config).length) === 1;
@@ -20,7 +21,15 @@ function startDependency(info) {
     service: check.unemptyString,
   });
   la(isValidDependency(info), 'expected dependency info', info);
-  return Promise.resolve(info.service);
+
+  return chdir.to(info.path)
+    .then(function () {
+      console.log('starting', quote(info.service), 'in', quote(process.cwd()));
+      return info.service;
+    })
+    .tap(chdir.back);
+
+  // return Promise.resolve(info.service);
 }
 
 function startDependencies(config) {
@@ -69,12 +78,19 @@ function startService(serviceName, serviceConfig) {
   return {
     name: serviceName,
     child: spawn(cmd, args),
-    cmd: cmd
+    cmd: cmd,
+    args: args
   };
 
 }
 
-function startMainService(config) {
+function startMainService(config, serviceName) {
+  if (check.unemptyString(serviceName)) {
+    la(check.has(config, serviceName),
+      'cannot find service', quote(serviceName), 'in config', config);
+    return startService(serviceName, config[serviceName]);
+  }
+
   var services = R.reject(R.eq('dependencies'), R.keys(config));
 
   return Promise.map(services, function (name) {
@@ -119,6 +135,13 @@ function printErrors(services) {
   });
 }
 
+function toString(x) {
+  if (check.array(x)) {
+    return x.join(' ');
+  }
+  return check.string(x) ? x : JSON.stringify(x);
+}
+
 function printRunningServices(services) {
   if (!check.unemptyArray(services)) {
     return;
@@ -127,7 +150,8 @@ function printRunningServices(services) {
     return {
       name: s.name,
       pid: s.child.pid,
-      cmd: s.cmd
+      cmd: s.cmd,
+      args: toString(s.args)
     };
   });
   console.table('started services', namePids);
@@ -154,12 +178,12 @@ function loadConfig(filename) {
   return config;
 }
 
-function quickly(config) {
+function quickly(config, serviceName) {
   if (!config) {
     config = loadConfig(CONFIG_NAME);
   }
 
-  var startNeededService = startMainService.bind(null, config);
+  var startNeededService = startMainService.bind(null, config, serviceName);
 
   Promise.resolve(config)
     .then(startDependencies)

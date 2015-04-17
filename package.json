@@ -28,6 +28,7 @@
   "homepage": "https://github.com/bahmutov/quickly",
   "dependencies": {
     "bluebird": "2.9.24",
+    "chdir-promise": "0.2.1",
     "check-more-types": "1.5.0",
     "check-types": "1.4.0",
     "console.table": "0.4.0",
