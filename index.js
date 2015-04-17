@@ -14,8 +14,13 @@ function configDescribesSingleService(config) {
 }
 
 function startDependency(info) {
-  la(check.object(info), 'expected dependency info', info);
-  return Promise.resolve(info.name || info.service);
+  info.service = info.service || info.name;
+  var isValidDependency = R.partial(check.schema, {
+    path: check.unemptyString,
+    service: check.unemptyString,
+  });
+  la(isValidDependency(info), 'expected dependency info', info);
+  return Promise.resolve(info.service);
 }
 
 function startDependencies(config) {
@@ -43,34 +48,37 @@ function startDependencies(config) {
   return Promise.map(deps, startDependency, { concurrency: 1 });
 }
 
-function startService(config) {
+function startService(serviceName, serviceConfig) {
+  la(check.object(serviceConfig) || check.unemptyString(serviceConfig),
+    'invalid config', serviceConfig, 'for', serviceName);
+
+  var cmd = check.unemptyString(serviceConfig) ? serviceConfig : serviceConfig.exec;
+  la(check.unemptyString(cmd), 'cannot find command for service', serviceName,
+    'in config', serviceConfig);
+
+  var args = check.unemptyString(serviceConfig) ? [] : serviceConfig.args;
+  if (!args) {
+    args = [];
+  } else if (check.string(args)) {
+    args = args.split(' ');
+  }
+
+  console.log('starting', quote(serviceName),
+    'in', quote(process.cwd()), 'command', quote(cmd), quote(args.join(' ')));
+
+  return {
+    name: serviceName,
+    child: spawn(cmd, args),
+    cmd: cmd
+  };
+
+}
+
+function startMainService(config) {
   var services = R.reject(R.eq('dependencies'), R.keys(config));
 
-  return Promise.map(services, function (serviceName) {
-    var serviceConfig = config[serviceName];
-    la(check.object(serviceConfig) || check.unemptyString(serviceConfig),
-      'invalid config', serviceConfig, 'for', serviceName);
-
-    var cmd = check.unemptyString(serviceConfig) ? serviceConfig : serviceConfig.exec;
-    la(check.unemptyString(cmd), 'cannot find command for service', serviceName,
-      'in config', serviceConfig);
-
-    var args = check.unemptyString(serviceConfig) ? [] : serviceConfig.args;
-    if (!args) {
-      args = [];
-    } else if (check.string(args)) {
-      args = args.split(' ');
-    }
-
-    console.log('starting', quote(serviceName),
-      'in', quote(process.cwd()), 'command', quote(cmd), quote(args.join(' ')));
-
-    return {
-      name: serviceName,
-      child: spawn(cmd, args),
-      cmd: cmd
-    };
-
+  return Promise.map(services, function (name) {
+    return startService(name, config[name]);
   }, { concurrency: 1 });
 }
 
@@ -151,17 +159,16 @@ function quickly(config) {
     config = loadConfig(CONFIG_NAME);
   }
 
-  var startNeededService = startService.bind(null, config);
+  var startNeededService = startMainService.bind(null, config);
 
   Promise.resolve(config)
     .then(startDependencies)
-    .tap(printStartedDependencies).done();
-    /*
+    .tap(printStartedDependencies)
     .then(startNeededService)
     .tap(printErrors)
     .tap(printRunningServices)
     .then(waitAndKill)
-    .done();*/
+    .done();
 }
 
 module.exports = quickly;
