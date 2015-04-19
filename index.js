@@ -93,7 +93,8 @@ function startMainService(config, serviceName) {
   if (check.unemptyString(serviceName)) {
     la(check.has(config, serviceName),
       'cannot find service', quote(serviceName), 'in config', config);
-    return startService(serviceName, config[serviceName]);
+    console.log('starting specific serice', quote(serviceName));
+    return [startService(serviceName, config[serviceName])];
   }
 
   var services = R.reject(R.eq('dependencies'), R.keys(config));
@@ -105,10 +106,14 @@ function startMainService(config, serviceName) {
 
 function printStartedDependencies(dependencies) {
   if (check.unemptyArray(dependencies)) {
-    console.log('started dependencies', dependencies.join(', '));
+    console.log('started', dependencies.length, 'dependencies');
+    la(check.arrayOf(check.fn, dependencies),
+      'expected stop / kill function for each dependency', dependencies);
   } else {
     console.log('no dependencies to start');
   }
+
+  return dependencies;
 }
 
 function printErrors(services) {
@@ -151,8 +156,8 @@ function printRunningServices(services) {
 }
 
 function stopStartedServices(namePids) {
-  la(check.array(namePids), 'expected list of services', namePids);
   console.log('stopping', namePids.map(R.prop('name')));
+  la(check.array(namePids), 'expected list of services', namePids);
 
   namePids.forEach(function (proc) {
     la(check.fn(proc.kill), 'child process', proc.name, 'is missing kill fn', proc);
@@ -160,11 +165,28 @@ function stopStartedServices(namePids) {
   });
 }
 
-function killCallback(services) {
+function killCallback(serviceName, killDependencies, services) {
+  console.log('kill callback', quote(serviceName));
+  console.log('kill dependencies', killDependencies.length);
+  console.log('kill services', services.length);
+
   if (check.unemptyArray(services)) {
-    return R.partial(stopStartedServices, services);
+    // return R.partial(stopStartedServices, services);
+    stopStartedServices(services);
+    /*
+    services.forEach(function (service, k) {
+      console.log('stopping service', k);
+    });*/
   } else {
-    console.log('no services to start');
+    console.log('no services to kill for', quote(serviceName));
+  }
+  if (check.unemptyArray(killDependencies)) {
+    killDependencies.forEach(function (kill, k) {
+      console.log('stopping dependency', k);
+      kill();
+    });
+  } else {
+    console.log('no dependencies to kill for', quote(serviceName));
   }
 }
 
@@ -188,15 +210,21 @@ function quickly(config, serviceName) {
     config = loadConfig(fullConfigName);
   }
 
-  var startNeededService = startMainService.bind(null, config, serviceName);
+  var startNeededService = R.partial(startMainService, config, serviceName);
+  var killStarted;
 
   return Promise.resolve(config)
-    .then(startDependencies)
+    .then(startDependencies) // returns list of kill functions
+    .tap(function (killDeps) {
+      killStarted = R.partial(killCallback, serviceName, killDeps);
+    })
     .tap(printStartedDependencies)
     .then(startNeededService)
     .tap(printErrors)
     .tap(printRunningServices)
-    .then(killCallback);
+    .then(function (services) {
+      return R.partial(killStarted, services);
+    });
 }
 
 module.exports = quickly;

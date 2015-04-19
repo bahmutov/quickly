@@ -9,6 +9,7 @@ console.log(info);
 function prepareToKill(cb) {
   console.log('Press Ctrl+C to stop this process and kill all services');
   process.on('SIGINT', function cleanupStartedServices() {
+    console.log('Ctrl+C has been received');
     cb();
     console.log('\nprocess is ready to exit');
     process.exit();
