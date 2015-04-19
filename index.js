@@ -79,7 +79,12 @@ function startService(serviceName, serviceConfig) {
     name: serviceName,
     child: spawn(cmd, args),
     cmd: cmd,
-    args: args
+    args: args,
+    kill: function kill() {
+      var signal = this.signal || 'SIGKILL';
+      console.log('killing', quote(this.name), 'via', quote(signal));
+      this.child.kill(signal);
+    }
   };
 
 }
@@ -97,19 +102,6 @@ function startMainService(config, serviceName) {
     return startService(name, config[name]);
   }, { concurrency: 1 });
 }
-
-/*
-function prepareToKill(namePids) {
-  process.on('SIGINT', function cleanupStartedServices() {
-    console.log('\nprocess is ready to exit');
-    namePids.forEach(function (proc) {
-      console.log('killing', quote(proc.name));
-      proc.child.kill('SIGKILL');
-    });
-    console.log('all done');
-    process.exit();
-  });
-}*/
 
 function printStartedDependencies(dependencies) {
   if (check.unemptyArray(dependencies)) {
@@ -161,10 +153,10 @@ function printRunningServices(services) {
 function stopStartedServices(namePids) {
   la(check.array(namePids), 'expected list of services', namePids);
   console.log('stopping', namePids.map(R.prop('name')));
+
   namePids.forEach(function (proc) {
-    var signal = proc.signal || 'SIGKILL';
-    console.log('killing', quote(proc.name), 'via', quote(signal));
-    proc.child.kill(signal);
+    la(check.fn(proc.kill), 'child process', proc.name, 'is missing kill fn', proc);
+    proc.kill();
   });
 }
 

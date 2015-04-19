@@ -12,13 +12,6 @@ function prepareToKill(cb) {
     cb();
     console.log('\nprocess is ready to exit');
     process.exit();
-    /*
-    namePids.forEach(function (proc) {
-      console.log('killing', quote(proc.name));
-      proc.child.kill('SIGKILL');
-    });
-    console.log('all done');
-    process.exit();*/
   });
 }
 
