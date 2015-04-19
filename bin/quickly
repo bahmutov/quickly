@@ -1,11 +1,35 @@
 #!/usr/bin/env node
 
+require('lazy-ass');
+var check = require('check-more-types');
 var pkg = require('../package.json');
 var info = pkg.name + '@' + pkg.version + ' - ' + pkg.description;
 console.log(info);
 
-require('../index')()
-  .finally(function () {
+function prepareToKill(cb) {
+  console.log('Press Ctrl+C to stop this process and kill all services');
+  process.on('SIGINT', function cleanupStartedServices() {
+    cb();
+    console.log('\nprocess is ready to exit');
+    process.exit();
+    /*
+    namePids.forEach(function (proc) {
+      console.log('killing', quote(proc.name));
+      proc.child.kill('SIGKILL');
+    });
     console.log('all done');
+    process.exit();*/
+  });
+}
+
+require('../index')()
+  .then(function (killServices) {
+    la(check.maybe.fn(killServices), 'expected kill started services fn', killServices);
+    if (check.fn(killServices)) {
+      prepareToKill(killServices);
+    }
+  })
+  .catch(function (err) {
+    console.error(err);
   })
   .done();

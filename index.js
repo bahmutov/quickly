@@ -98,17 +98,18 @@ function startMainService(config, serviceName) {
   }, { concurrency: 1 });
 }
 
+/*
 function prepareToKill(namePids) {
   process.on('SIGINT', function cleanupStartedServices() {
     console.log('\nprocess is ready to exit');
     namePids.forEach(function (proc) {
-      console.log('killing', proc.name);
+      console.log('killing', quote(proc.name));
       proc.child.kill('SIGKILL');
     });
     console.log('all done');
     process.exit();
   });
-}
+}*/
 
 function printStartedDependencies(dependencies) {
   if (check.unemptyArray(dependencies)) {
@@ -157,10 +158,19 @@ function printRunningServices(services) {
   console.table('started services', namePids);
 }
 
-function waitAndKill(services) {
+function stopStartedServices(namePids) {
+  la(check.array(namePids), 'expected list of services', namePids);
+  console.log('stopping', namePids.map(R.prop('name')));
+  namePids.forEach(function (proc) {
+    var signal = proc.signal || 'SIGKILL';
+    console.log('killing', quote(proc.name), 'via', quote(signal));
+    proc.child.kill(signal);
+  });
+}
+
+function killCallback(services) {
   if (check.unemptyArray(services)) {
-    console.log('Press Ctrl+C to stop this process and kill all services');
-    prepareToKill(services);
+    return R.partial(stopStartedServices, services);
   } else {
     console.log('no services to start');
   }
@@ -194,7 +204,7 @@ function quickly(config, serviceName) {
     .then(startNeededService)
     .tap(printErrors)
     .tap(printRunningServices)
-    .then(waitAndKill);
+    .then(killCallback);
 }
 
 module.exports = quickly;
