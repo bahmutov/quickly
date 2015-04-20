@@ -123,12 +123,12 @@ function printErrors(services) {
   services.forEach(function (s) {
     s.child.stdout.setEncoding('utf8');
     s.child.stdout.on('data', function (txt) {
-      console.error(s.name + ':', txt);
+      process.stdout.write(s.name + ': ' + txt);
     });
 
     s.child.stderr.setEncoding('utf8');
     s.child.stderr.on('data', function (txt) {
-      console.error(s.name + ' error:', txt);
+      process.stderr.write(s.name + ' error: ' + txt);
     });
   });
 }
