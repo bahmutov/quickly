@@ -11,6 +11,7 @@ var quote = require('quote');
 var chdir = require('chdir-promise');
 var j = R.partialRight(JSON.stringify, null, 2);
 var ask = require('inquirer');
+var formConfigNames = require('./src/form-config-names');
 
 function configDescribesSingleService(config) {
   return (Object.keys(config).length) === 1;
@@ -60,35 +61,77 @@ function startDependencies(config) {
   return Promise.map(deps, startDependency, { concurrency: 1 });
 }
 
+function selectOneConfig(configs) {
+  var names = formConfigNames(configs);
+
+  la(check.arrayOfStrings(names), 'expected config names', names);
+  la(names.length > 1, 'expected multiple config names', names);
+
+  // TODO verify that all names are distinct
+
+  var question = {
+    type: 'list',
+    name: 'config',
+    message: 'Pick a configuration to start',
+    choices: names
+  };
+
+  return new Promise(function (resolve) {
+    ask.prompt([question], function (answers) {
+      var name = answers.config;
+      console.log('user chose config', quote(name));
+      var index = names.indexOf(name);
+      la(index >= 0 && index < configs.length, 'cannot find selected config', name);
+      resolve(configs[index]);
+    });
+  });
+}
+
 function startService(serviceName, serviceConfig) {
-  la(check.object(serviceConfig) || check.unemptyString(serviceConfig),
-    'invalid config', serviceConfig, 'for', serviceName);
+  la(check.unemptyString(serviceName), 'expected service name', serviceName);
 
-  var cmd = check.unemptyString(serviceConfig) ? serviceConfig : serviceConfig.exec;
-  la(check.unemptyString(cmd), 'cannot find command for service', serviceName,
-    'in config', serviceConfig);
-
-  var args = check.unemptyString(serviceConfig) ? [] : serviceConfig.args;
-  if (!args) {
-    args = [];
-  } else if (check.string(args)) {
-    args = args.split(' ');
+  var selectedConfig;
+  if (check.array(serviceConfig)) {
+    if (serviceConfig.length === 1) {
+      selectConfig = Promise.resolve(serviceConfig[0]);
+    } else {
+      selectConfig = selectOneConfig(serviceConfig);
+    }
+  } else {
+    selectConfig = Promise.resolve(serviceConfig);
   }
 
-  console.log('starting', quote(serviceName),
-    'in', quote(process.cwd()), 'command', quote(cmd), quote(args.join(' ')));
+  return selectConfig.then(function (serviceConfig) {
+    la(check.object(serviceConfig) || check.unemptyString(serviceConfig),
+      'invalid', typeof serviceConfig,
+      'config', serviceConfig, 'for', quote(serviceName));
 
-  return {
-    name: serviceName,
-    child: spawn(cmd, args),
-    cmd: cmd,
-    args: args,
-    kill: function kill() {
-      var signal = this.signal || 'SIGKILL';
-      console.log('killing', quote(this.name), 'via', quote(signal));
-      this.child.kill(signal);
+    var cmd = check.unemptyString(serviceConfig) ? serviceConfig : serviceConfig.exec;
+    la(check.unemptyString(cmd), 'cannot find command for service', serviceName,
+      'in config', serviceConfig);
+
+    var args = check.unemptyString(serviceConfig) ? [] : serviceConfig.args;
+    if (!args) {
+      args = [];
+    } else if (check.string(args)) {
+      args = args.split(' ');
     }
-  };
+
+    console.log('starting', quote(serviceName),
+      'in', quote(process.cwd()), 'command', quote(cmd), quote(args.join(' ')));
+
+    return {
+      name: serviceName,
+      child: spawn(cmd, args),
+      cmd: cmd,
+      args: args,
+      kill: function kill() {
+        var signal = this.signal || 'SIGKILL';
+        console.log('killing', quote(this.name), 'via', quote(signal));
+        this.child.kill(signal);
+      }
+    };
+  });
 
 }
 
