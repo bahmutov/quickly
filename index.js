@@ -10,6 +10,7 @@ var spawn = require('child_process').spawn;
 var quote = require('quote');
 var chdir = require('chdir-promise');
 var j = R.partialRight(JSON.stringify, null, 2);
+var ask = require('inquirer');
 
 function configDescribesSingleService(config) {
   return (Object.keys(config).length) === 1;
@@ -39,6 +40,7 @@ function startDependencies(config) {
   if (configDescribesSingleService(config)) {
     var name = Object.keys(config)[0];
     config = config[name];
+    console.log('the config has single dependency', quote(name));
   }
 
   var deps = config.dependencies;
@@ -90,19 +92,57 @@ function startService(serviceName, serviceConfig) {
 
 }
 
-function startMainService(config, serviceName) {
-  if (check.unemptyString(serviceName)) {
-    la(check.has(config, serviceName),
-      'cannot find service', quote(serviceName), 'in config', config);
-    console.log('starting specific serice', quote(serviceName));
-    return [startService(serviceName, config[serviceName])];
-  }
-
-  var services = R.reject(R.eq('dependencies'), R.keys(config));
+function startServices(config, services) {
+  la(check.arrayOfStrings(services), 'expected service names', services);
+  console.log('starting services', services);
 
   return Promise.map(services, function (name) {
     return startService(name, config[name]);
   }, { concurrency: 1 });
+}
+
+function selectOneService(services) {
+  la(check.arrayOfStrings(services), 'expected service names', services);
+  la(services.length > 1, 'expected multiple services', services);
+
+  var question = {
+    type: 'list',
+    name: 'service',
+    message: 'Pick a service to start',
+    choices: services
+  };
+
+  return new Promise(function (resolve) {
+    ask.prompt([question], function (answers) {
+      console.log('user chose', answers.service);
+      resolve([answers.service]);
+    });
+  });
+}
+
+function startMainService(config, serviceName) {
+  if (check.unemptyString(serviceName)) {
+    la(check.has(config, serviceName),
+      'cannot find service', quote(serviceName), 'in config', config);
+    console.log('starting specific service', quote(serviceName));
+    return [startService(serviceName, config[serviceName])];
+  }
+
+  var services = R.reject(R.eq('dependencies'), R.keys(config));
+  la(check.arrayOfStrings(services), 'expected service names', services,
+    'from config', config);
+
+  var selectService;
+
+  if (services.length > 1) {
+    console.log('found multiple services', services.map(quote).join(', '));
+    selectService = selectOneService(services);
+  } else {
+    selectService = Promise.resolve(services);
+  }
+
+  return selectService
+    .then(R.partial(startServices, config));
 }
 
 function printStartedDependencies(dependencies) {

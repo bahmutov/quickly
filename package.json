@@ -32,6 +32,7 @@
     "check-more-types": "1.5.0",
     "check-types": "1.4.0",
     "console.table": "0.4.0",
+    "inquirer": "0.8.2",
     "lazy-ass": "0.5.3",
     "quote": "0.4.0",
     "ramda": "0.13.0"
