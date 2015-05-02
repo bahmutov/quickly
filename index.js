@@ -9,6 +9,7 @@ var R = require('ramda');
 var spawn = require('child_process').spawn;
 var quote = require('quote');
 var chdir = require('chdir-promise');
+var j = R.partialRight(JSON.stringify, null, 2);
 
 function configDescribesSingleService(config) {
   return (Object.keys(config).length) === 1;
@@ -133,6 +134,19 @@ function printErrors(services) {
   });
 }
 
+function printOnExit(services) {
+  if (!check.unemptyArray(services)) {
+    return;
+  }
+  services.forEach(function (s) {
+    la(s.child, 'missing child process for service', s);
+    s.child.on('close', function (code) {
+      console.log('service', quote(s.name), 'finished with code', code);
+      // TODO handle non-zero exit
+    });
+  });
+}
+
 function toString(x) {
   if (check.array(x)) {
     return x.join(' ');
@@ -198,7 +212,7 @@ function loadConfig(filename) {
   }
   console.log('loading', filename);
   var config = require(filename);
-  console.log('loaded config', config, 'from', quote(filename));
+  console.log('loaded config\n' + j(config) + '\nfrom', quote(filename));
   return config;
 }
 
@@ -221,6 +235,7 @@ function quickly(config, serviceName) {
     .tap(printStartedDependencies)
     .then(startNeededService)
     .tap(printErrors)
+    .tap(printOnExit)
     .tap(printRunningServices)
     .then(function (services) {
       return R.partial(killStarted, services);
