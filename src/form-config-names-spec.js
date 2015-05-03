@@ -1,9 +1,14 @@
 require('lazy-ass');
-var check = require('check-more-types');
-var form = require('./form-config-names');
-var R = require('ramda');
+require('lazy-ass-helpful');
+require('lazy-ass-helpful/lazy-ass-helpful-bdd.js');
 
+// TODO use helpDescribe
 describe('form config names', function () {
+
+  var check = require('check-more-types');
+  var form = require('./form-config-names');
+  var R = require('ramda');
+
   it('is a function', function () {
     la(check.fn(form));
   });
