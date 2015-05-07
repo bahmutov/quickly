@@ -27,13 +27,13 @@
   },
   "homepage": "https://github.com/bahmutov/quickly",
   "dependencies": {
-    "bluebird": "2.9.24",
+    "bluebird": "2.9.25",
     "chdir-promise": "0.2.1",
-    "check-more-types": "1.5.0",
+    "check-more-types": "1.6.1",
     "check-types": "1.4.0",
     "console.table": "0.4.0",
-    "inquirer": "0.8.2",
-    "lazy-ass": "0.5.3",
+    "inquirer": "0.8.3",
+    "lazy-ass": "0.5.6",
     "quote": "0.4.0",
     "ramda": "0.13.0"
   },
