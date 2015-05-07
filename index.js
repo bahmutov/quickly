@@ -200,11 +200,18 @@ function printStartedDependencies(dependencies) {
   return dependencies;
 }
 
+var isService = R.partial(check.schema, {
+  name: check.string,
+  child: check.object
+});
+
 function printErrors(services) {
   if (!check.unemptyArray(services)) {
     return;
   }
-  services.forEach(function (s) {
+  services.forEach(function (s, k) {
+    la(isService(s), 'not a service', s,
+      'at position', k, 'in list of services', services);
     s.child.stdout.setEncoding('utf8');
     s.child.stdout.on('data', function (txt) {
       process.stdout.write(s.name + ': ' + txt);
