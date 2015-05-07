@@ -24,6 +24,8 @@ require('../index')()
     }
   })
   .catch(function (err) {
-    console.error(err);
+    console.error('I am terribly sorry, but there was a problem');
+    console.error(err.message);
+    console.error(err.stack);
   })
   .done();

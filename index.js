@@ -7,6 +7,7 @@ var join = require('path').join;
 var CONFIG_NAME = 'quickly.js';
 var R = require('ramda');
 var spawn = require('child_process').spawn;
+la(check.fn(spawn), 'missing spawn function');
 var quote = require('quote');
 var chdir = require('chdir-promise');
 var j = R.partialRight(JSON.stringify, null, 2);
@@ -31,8 +32,6 @@ function startDependency(info) {
       return quickly(null, info.service);
     })
     .tap(chdir.back);
-
-  // return Promise.resolve(info.service);
 }
 
 function startDependencies(config) {
@@ -118,7 +117,7 @@ function startService(serviceName, serviceConfig) {
     }
 
     console.log('starting', quote(serviceName),
-      'in', quote(process.cwd()), 'command', quote(cmd), quote(args.join(' ')));
+      'in', quote(process.cwd()), 'command', quote(cmd + ' ' + args.join(' ')));
 
     return {
       name: serviceName,
@@ -136,7 +135,10 @@ function startService(serviceName, serviceConfig) {
 }
 
 function startServices(config, services) {
+  la(check.object(config), 'expected config', config,
+    'when starting services', services);
   la(check.arrayOfStrings(services), 'expected service names', services);
+
   console.log('starting services', services);
 
   return Promise.map(services, function (name) {
@@ -167,8 +169,9 @@ function startMainService(config, serviceName) {
   if (check.unemptyString(serviceName)) {
     la(check.has(config, serviceName),
       'cannot find service', quote(serviceName), 'in config', config);
-    console.log('starting specific service', quote(serviceName));
-    return [startService(serviceName, config[serviceName])];
+    console.log('starting the specific service', quote(serviceName), 'only');
+    var serviceConfig = config[serviceName];
+    return startService(serviceName, serviceConfig);
   }
 
   var services = R.reject(R.eq('dependencies'), R.keys(config));
@@ -212,6 +215,11 @@ function printErrors(services) {
   services.forEach(function (s, k) {
     la(isService(s), 'not a service', s,
       'at position', k, 'in list of services', services);
+
+    la(check.has(s.child, 'stdout'), 'missing stdout on the child',
+      s.child, 'for service', s);
+    la(check.fn(s.child.stdout.setEncoding),
+      'missing set encoding on child', s.child.stdout, 'for service', s);
     s.child.stdout.setEncoding('utf8');
     s.child.stdout.on('data', function (txt) {
       process.stdout.write(s.name + ': ' + txt);
@@ -306,6 +314,10 @@ function loadConfig(filename) {
   return config;
 }
 
+function toArray(x) {
+  return Array.isArray(x) ? x : [x];
+}
+
 function quickly(config, serviceName) {
   console.log('quickly in', quote(process.cwd()), serviceName);
 
@@ -324,6 +336,7 @@ function quickly(config, serviceName) {
     })
     .tap(printStartedDependencies)
     .then(startNeededService)
+    .then(toArray)
     .tap(printErrors)
     .tap(printOnExit)
     .tap(printRunningServices)
