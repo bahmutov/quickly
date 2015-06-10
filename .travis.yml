@@ -12,5 +12,7 @@ deploy:
   api_key:
     secure: M1V5uyj9hi4SvpnMVhZ3dQjtOZ3zcLrcXDkY94FSSEnzfwaseA3rzvwxKfc/kJE/tCthE1m4kMCUjc2puZm4KSWLvY2pGhOsZFgrS5Ye2/7SIiwqs7dSPCsQOJqMVOsqnkXmJy7ZLPswW3h12ApztDksHw0Acg8DuVkgNTJj+bU=
   on:
+    # due to a bug in Travis for tags
+    all_branches: true
     tags: true
     repo: bahmutov/quickly
