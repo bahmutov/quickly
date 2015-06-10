@@ -1,6 +1,6 @@
 {
   "name": "quickly",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Quickly setup dependent services and servers for local development",
   "main": "index.js",
   "bin": "./bin/quickly",
