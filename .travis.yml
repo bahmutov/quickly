@@ -12,5 +12,6 @@ deploy:
     # due to a bug in Travis for tags
     tags: true
     all_branches: true
+    clean_up: false
     node: '0.10'
     repo: bahmutov/quickly
