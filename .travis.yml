@@ -1,9 +1,16 @@
 language: node_js
 node_js:
-  - "0.10"
-  - "0.12"
-  - iojs
+- '0.10'
+- '0.12'
+- iojs
 branches:
   only:
-    - master
-
+  - master
+deploy:
+  provider: npm
+  email: gleb.bahmutov@gmail.com
+  api_key:
+    secure: M1V5uyj9hi4SvpnMVhZ3dQjtOZ3zcLrcXDkY94FSSEnzfwaseA3rzvwxKfc/kJE/tCthE1m4kMCUjc2puZm4KSWLvY2pGhOsZFgrS5Ye2/7SIiwqs7dSPCsQOJqMVOsqnkXmJy7ZLPswW3h12ApztDksHw0Acg8DuVkgNTJj+bU=
+  on:
+    tags: true
+    repo: bahmutov/quickly
