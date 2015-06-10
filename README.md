@@ -104,6 +104,8 @@ A: {
 }
 ```
 
+For more configuration examples, browser the [test](test) folder.
+
 ## Install
 
     npm install -g quickly
