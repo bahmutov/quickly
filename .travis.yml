@@ -15,8 +15,4 @@ deploy:
     repo: bahmutov/quickly
 env:
   NPM_USERNAME:
-    secure: OKxq/jyh9YPJoWdzSV/ktb7Z28lEHO5QnTIo0vVfvnQ35JR5MmeQc0nHc3+ZuVzaJVRqaMtARz3bq0h5D3lqgGihXvAnH+04PW0ZhQmTjdPWgQXuF58rMbS7OclGYGKKS58bQ5L0yigbNXjNJCD4tJJ9Xu0SSr2+5wz5b5Z+pBs=
-  NPM_PASSWORD:
-    secure: PLQ1dUBzQejPb7wnpQlrztWL72G2WfcWjfZig11KLKh8MCZ77esEpl+0B2o0lQbtB2Qk7flycOGkMAkeZBmWG4+OkXcQEzCZQS0ltTsar+ydaAsXuS2Cfq+tBqlUKvz8zizkbSk7rsju37jX+wir+Z6RAV2Q6WVAUWofJRdjCuw=
-  NPM_EMAIL:
-    secure: TgqgQ8QhgIgPEBEqbVYLtrTB39V5eHL+3U3IeSy5mu4uQ4sQm1gWRgv/Cs9X769qTN9M6A8q0MsmV+sT2XvzuqrJAoMstnoh5Fln2Yz6WZmYFPEv2izBWT1YgtbwdtddTfW+tdzrvVXScHrRbofJAkshjWPh5VCWJA4r3zkUaqI=
+    secure: PjZwY+8fJ9HNo8QZ86e+sgBbK0HASwqAmBo2XChExB5chSm2a1c/9Q7xFybywzrZkSP3kOVJcCOrcAkf9R6uBvN8tdeFrxXG/wAMFJJx23tPOWB/Uz/QNVIk9a1/77K1XIvM3Hwa+R/PhWT5XlFXOoduFa397Jz5rR67Y2iyzN8=
