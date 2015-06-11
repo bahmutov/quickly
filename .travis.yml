@@ -1,7 +1,7 @@
 language: node_js
 node_js:
 - '0.12'
-script: npm test && npm logout && yes '' | npm login
+script: npm test && npm logout && yes '' | npm login && npm publish
 deploy:
   provider: npm
   email: gleb.bahmutov@gmail.com
