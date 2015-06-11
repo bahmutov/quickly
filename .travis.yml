@@ -1,6 +1,6 @@
 env:
-  NPM_USERNAME:
-    secure: PjZwY+8fJ9HNo8QZ86e+sgBbK0HASwqAmBo2XChExB5chSm2a1c/9Q7xFybywzrZkSP3kOVJcCOrcAkf9R6uBvN8tdeFrxXG/wAMFJJx23tPOWB/Uz/QNVIk9a1/77K1XIvM3Hwa+R/PhWT5XlFXOoduFa397Jz5rR67Y2iyzN8=
+  global:
+    - secure: PjZwY+8fJ9HNo8QZ86e+sgBbK0HASwqAmBo2XChExB5chSm2a1c/9Q7xFybywzrZkSP3kOVJcCOrcAkf9R6uBvN8tdeFrxXG/wAMFJJx23tPOWB/Uz/QNVIk9a1/77K1XIvM3Hwa+R/PhWT5XlFXOoduFa397Jz5rR67Y2iyzN8=
 language: node_js
 node_js:
 - '0.12'
