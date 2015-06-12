@@ -5,6 +5,7 @@
 [![NPM info][nodei.co]](https://npmjs.org/package/quickly)
 
 [![Build status][ci-image]][ci-url]
+[![Circle CI](https://circleci.com/gh/bahmutov/quickly.svg?style=svg)](https://circleci.com/gh/bahmutov/quickly)
 [![dependencies][dependencies-image]][dependencies-url]
 [![devdependencies][quickly-devdependencies-image] ][quickly-devdependencies-url]
 
