@@ -1,0 +1,5 @@
+deployment:
+  npm:
+    branch: master
+    commands:
+      - npm run 2npm
