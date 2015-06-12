@@ -2,4 +2,5 @@ deployment:
   npm:
     branch: master
     commands:
+      - yes '' | npm login
       - npm run 2npm
